@@ -37,9 +37,6 @@ func parseInputFile() {
 }
 
 func calcDistance() int {
-	sort.Ints(list1)
-	sort.Ints(list2)
-
 	var distanceSum int
 	for i := 0; i < len(list1); i++ {
 		distance := list1[i] - list2[i]
@@ -53,8 +50,35 @@ func calcDistance() int {
 	return distanceSum
 }
 
+func timesNumberAppears(nbr int) int {
+	var times int
+	for i := 0; i < len(list2); i++ {
+		if list2[i] > nbr {
+			break
+		}
+
+		if list2[i] == nbr {
+			times++
+		}
+	}
+
+	return times
+}
+
+func calcSimilarity() int {
+	var similaritySum int
+	for i := 0; i < len(list1); i++ {
+		similaritySum += list1[i] * timesNumberAppears(list1[i])
+	}
+
+	return similaritySum
+}
+
 func main() {
 	parseInputFile()
+	sort.Ints(list1)
+	sort.Ints(list2)
 
-	println(calcDistance())
+	println("Part 1: ", calcDistance())
+	println("Part 2: ", calcSimilarity())
 }
