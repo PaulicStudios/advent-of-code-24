@@ -48,34 +48,50 @@ const (
 	DECREASE
 )
 
-func numSaveReports() int {
-	numValidReports := 0
-	for _, col := range list {
-		var dir = UNDEFINED
-		for indRow, row := range col {
-			if indRow == 0 {
-				continue
-			}
+func checkRow(row []int) bool {
+	dir := UNDEFINED
+	for indRow, col := range row {
+		if indRow == 0 {
+			continue
+		}
 
-			diff := row - col[indRow-1]
-			if diff == 0 {
-				break
+		diff := col - row[indRow-1]
+		if diff == 0 {
+			return false
+		}
+		if dir == UNDEFINED {
+			if diff > 0 {
+				dir = INCREASE
+			} else {
+				dir = DECREASE
 			}
-			if dir == UNDEFINED {
-				if diff > 0 {
-					dir = INCREASE
-				} else {
-					dir = DECREASE
+		}
+		if dir == INCREASE && (diff < 0 || diff > 3) {
+			return false
+		}
+		if dir == DECREASE && (diff > 0 || diff < -3) {
+			return false
+		}
+	}
+	return true
+}
+
+func numSaveReports(removeOneLevel bool) int {
+	numValidReports := 0
+	for _, row := range list {
+		if checkRow(row) {
+			numValidReports++
+			continue
+		}
+		if removeOneLevel {
+			for ind := range row {
+				rowCopy := make([]int, len(row))
+				copy(rowCopy, row)
+				rowCopy = append(rowCopy[:ind], rowCopy[ind+1:]...)
+				if checkRow(rowCopy) {
+					numValidReports++
+					break
 				}
-			}
-			if dir == INCREASE && (diff < 0 || diff > 3) {
-				break
-			}
-			if dir == DECREASE && (diff > 0 || diff < -3) {
-				break
-			}
-			if indRow == len(col)-1 {
-				numValidReports++
 			}
 		}
 	}
@@ -85,5 +101,6 @@ func numSaveReports() int {
 func main() {
 	parseInputFile()
 
-	println("Part 1: ", numSaveReports())
+	println("Part 1: ", numSaveReports(false))
+	println("Part 2: ", numSaveReports(true))
 }
