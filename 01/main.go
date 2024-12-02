@@ -1,6 +1,7 @@
 package main
 
 import (
+	"adventofcode24/utils"
 	"bufio"
 	"os"
 	"sort"
@@ -41,10 +42,7 @@ func calcDistance() int {
 	for i := 0; i < len(list1); i++ {
 		distance := list1[i] - list2[i]
 
-		if distance < 0 {
-			distance = -distance
-		}
-		distanceSum += distance
+		distanceSum += utils.Abs(distance)
 	}
 
 	return distanceSum
