@@ -3,11 +3,11 @@ package main
 import (
 	"bufio"
 	"os"
+	"regexp"
 	"strconv"
-	"strings"
 )
 
-var list [][]int
+var input string
 
 func convertToInt(s string) int {
 	nbr, err := strconv.Atoi(s)
@@ -18,89 +18,47 @@ func convertToInt(s string) int {
 }
 
 func parseInputFile() {
-	file, err := os.Open("02/input.txt")
+	file, err := os.Open("03/input.txt")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
+	input = ""
 	scanner := bufio.NewScanner(file)
-	lineIndex := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		split := strings.Split(line, " ")
 
-		list = append(list, make([]int, len(split)))
-
-		for ind, s := range split {
-			nbr := convertToInt(s)
-			list[lineIndex][ind] = nbr
-		}
-		lineIndex++
+		input += line + "\n"
 	}
 }
 
-type Direction int
+func findOccurrences(input string) [][2]int {
+	re := regexp.MustCompile(`mul\((\d{1,3}),(\d{1,3})\)`)
+	matches := re.FindAllStringSubmatch(input, -1)
 
-const (
-	UNDEFINED Direction = iota
-	INCREASE
-	DECREASE
-)
+	var results [][2]int
+	results = make([][2]int, 0)
 
-func checkRow(row []int) bool {
-	dir := UNDEFINED
-	for indRow, col := range row {
-		if indRow == 0 {
-			continue
-		}
-
-		diff := col - row[indRow-1]
-		if diff == 0 {
-			return false
-		}
-		if dir == UNDEFINED {
-			if diff > 0 {
-				dir = INCREASE
-			} else {
-				dir = DECREASE
-			}
-		}
-		if dir == INCREASE && (diff < 0 || diff > 3) {
-			return false
-		}
-		if dir == DECREASE && (diff > 0 || diff < -3) {
-			return false
-		}
+	for ind, match := range matches {
+		results = append(results, [2]int{})
+		results[ind][0] = convertToInt(match[1])
+		results[ind][1] = convertToInt(match[2])
 	}
-	return true
+	return results
 }
 
-func numSaveReports(removeOneLevel bool) int {
-	numValidReports := 0
-	for _, row := range list {
-		if checkRow(row) {
-			numValidReports++
-			continue
-		}
-		if removeOneLevel {
-			for ind := range row {
-				rowCopy := make([]int, len(row))
-				copy(rowCopy, row)
-				rowCopy = append(rowCopy[:ind], rowCopy[ind+1:]...)
-				if checkRow(rowCopy) {
-					numValidReports++
-					break
-				}
-			}
-		}
+func multiplySum() int {
+	occurrences := findOccurrences(input)
+	sum := 0
+	for _, occurrence := range occurrences {
+		sum += occurrence[0] * occurrence[1]
 	}
-	return numValidReports
+	return sum
 }
 
 func main() {
 	parseInputFile()
 
-	println("Part 1: ", numSaveReports(false))
-	println("Part 2: ", numSaveReports(true))
+	println("Part 1: ", multiplySum())
 }
