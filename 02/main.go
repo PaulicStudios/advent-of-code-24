@@ -3,11 +3,11 @@ package main
 import (
 	"bufio"
 	"os"
-	"regexp"
 	"strconv"
+	"strings"
 )
 
-var input string
+var list [][]int
 
 func convertToInt(s string) int {
 	nbr, err := strconv.Atoi(s)
@@ -18,74 +18,89 @@ func convertToInt(s string) int {
 }
 
 func parseInputFile() {
-	file, err := os.Open("03/input.txt")
+	file, err := os.Open("02/input.txt")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	input = ""
 	scanner := bufio.NewScanner(file)
+	lineIndex := 0
 	for scanner.Scan() {
 		line := scanner.Text()
+		split := strings.Split(line, " ")
 
-		input += line + "\n"
+		list = append(list, make([]int, len(split)))
+
+		for ind, s := range split {
+			nbr := convertToInt(s)
+			list[lineIndex][ind] = nbr
+		}
+		lineIndex++
 	}
 }
 
-func findOccurrences(input string) [][2]int {
-	re := regexp.MustCompile(`mul\((\d{1,3}),(\d{1,3})\)`)
-	matches := re.FindAllStringSubmatch(input, -1)
+type Direction int
 
-	var results [][2]int
-	results = make([][2]int, 0)
+const (
+	UNDEFINED Direction = iota
+	INCREASE
+	DECREASE
+)
 
-	for ind, match := range matches {
-		results = append(results, [2]int{})
-		results[ind][0] = convertToInt(match[1])
-		results[ind][1] = convertToInt(match[2])
-	}
-	return results
-}
-
-func findOccurrencesEnable(input string) [][2]int {
-	re := regexp.MustCompile(`(mul\((\d{1,3}),(\d{1,3})\)|don't\(\)|do\(\))`)
-	matches := re.FindAllStringSubmatch(input, -1)
-
-	var results [][2]int
-	results = make([][2]int, 0)
-	do := true
-
-	for _, match := range matches {
-		if match[0] == "do()" {
-			do = true
-			continue
-		} else if match[0] == "don't()" {
-			do = false
+func checkRow(row []int) bool {
+	dir := UNDEFINED
+	for indRow, col := range row {
+		if indRow == 0 {
 			continue
 		}
-		if !do {
-			continue
+
+		diff := col - row[indRow-1]
+		if diff == 0 {
+			return false
 		}
-		results = append(results, [2]int{convertToInt(match[2]), convertToInt(match[3])})
+		if dir == UNDEFINED {
+			if diff > 0 {
+				dir = INCREASE
+			} else {
+				dir = DECREASE
+			}
+		}
+		if dir == INCREASE && (diff < 0 || diff > 3) {
+			return false
+		}
+		if dir == DECREASE && (diff > 0 || diff < -3) {
+			return false
+		}
 	}
-	return results
+	return true
 }
 
-type findOccurrencesFunc func(string) [][2]int
-
-func multiplySum(occurrencesFunc findOccurrencesFunc) int {
-	occurrences := occurrencesFunc(input)
-	sum := 0
-	for _, occurrence := range occurrences {
-		sum += occurrence[0] * occurrence[1]
+func numSaveReports(removeOneLevel bool) int {
+	numValidReports := 0
+	for _, row := range list {
+		if checkRow(row) {
+			numValidReports++
+			continue
+		}
+		if removeOneLevel {
+			for ind := range row {
+				rowCopy := make([]int, len(row))
+				copy(rowCopy, row)
+				rowCopy = append(rowCopy[:ind], rowCopy[ind+1:]...)
+				if checkRow(rowCopy) {
+					numValidReports++
+					break
+				}
+			}
+		}
 	}
-	return sum
+	return numValidReports
 }
 
 func main() {
 	parseInputFile()
 
-	println("Part 1: ", multiplySum(findOccurrences))
-	println("Part 2: ", multiplySum(findOccurrencesEnable))
+	println("Part 1: ", numSaveReports(false))
+	println("Part 2: ", numSaveReports(true))
 }
