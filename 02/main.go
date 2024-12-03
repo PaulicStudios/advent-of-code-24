@@ -48,8 +48,34 @@ func findOccurrences(input string) [][2]int {
 	return results
 }
 
-func multiplySum() int {
-	occurrences := findOccurrences(input)
+func findOccurrencesEnable(input string) [][2]int {
+	re := regexp.MustCompile(`(mul\((\d{1,3}),(\d{1,3})\)|don't\(\)|do\(\))`)
+	matches := re.FindAllStringSubmatch(input, -1)
+
+	var results [][2]int
+	results = make([][2]int, 0)
+	do := true
+
+	for _, match := range matches {
+		if match[0] == "do()" {
+			do = true
+			continue
+		} else if match[0] == "don't()" {
+			do = false
+			continue
+		}
+		if !do {
+			continue
+		}
+		results = append(results, [2]int{convertToInt(match[2]), convertToInt(match[3])})
+	}
+	return results
+}
+
+type findOccurrencesFunc func(string) [][2]int
+
+func multiplySum(occurrencesFunc findOccurrencesFunc) int {
+	occurrences := occurrencesFunc(input)
 	sum := 0
 	for _, occurrence := range occurrences {
 		sum += occurrence[0] * occurrence[1]
@@ -60,5 +86,6 @@ func multiplySum() int {
 func main() {
 	parseInputFile()
 
-	println("Part 1: ", multiplySum())
+	println("Part 1: ", multiplySum(findOccurrences))
+	println("Part 2: ", multiplySum(findOccurrencesEnable))
 }
