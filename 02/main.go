@@ -1,21 +1,13 @@
 package main
 
 import (
+	"adventofcode24/utils"
 	"bufio"
 	"os"
-	"strconv"
 	"strings"
 )
 
 var list [][]int
-
-func convertToInt(s string) int {
-	nbr, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
-	}
-	return nbr
-}
 
 func parseInputFile() {
 	file, err := os.Open("02/input.txt")
@@ -33,7 +25,7 @@ func parseInputFile() {
 		list = append(list, make([]int, len(split)))
 
 		for ind, s := range split {
-			nbr := convertToInt(s)
+			nbr := utils.ConvertToInt(s)
 			list[lineIndex][ind] = nbr
 		}
 		lineIndex++

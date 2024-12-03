@@ -1,21 +1,13 @@
 package main
 
 import (
+	"adventofcode24/utils"
 	"bufio"
 	"os"
 	"regexp"
-	"strconv"
 )
 
 var input string
-
-func convertToInt(s string) int {
-	nbr, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
-	}
-	return nbr
-}
 
 func parseInputFile() {
 	file, err := os.Open("03/input.txt")
@@ -42,8 +34,8 @@ func findOccurrences(input string) [][2]int {
 
 	for ind, match := range matches {
 		results = append(results, [2]int{})
-		results[ind][0] = convertToInt(match[1])
-		results[ind][1] = convertToInt(match[2])
+		results[ind][0] = utils.ConvertToInt(match[1])
+		results[ind][1] = utils.ConvertToInt(match[2])
 	}
 	return results
 }
@@ -67,7 +59,7 @@ func findOccurrencesEnable(input string) [][2]int {
 		if !do {
 			continue
 		}
-		results = append(results, [2]int{convertToInt(match[2]), convertToInt(match[3])})
+		results = append(results, [2]int{utils.ConvertToInt(match[2]), utils.ConvertToInt(match[3])})
 	}
 	return results
 }
