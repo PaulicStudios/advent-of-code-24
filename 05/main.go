@@ -68,12 +68,7 @@ func validList(list []int) bool {
 }
 
 func getMiddleNumber(list []int) int {
-	for i, nbr := range list {
-		if i == len(list)/2 {
-			return nbr
-		}
-	}
-	return 0
+	return list[len(list)/2]
 }
 
 func sortOrdering() {
