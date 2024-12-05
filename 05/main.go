@@ -42,34 +42,25 @@ func parseInputFile() {
 	}
 }
 
-//func checkOrder(startInd int, list []int) bool {
-//	for _, ord := range order {
-//		for i := startInd; i < len(list); i++ {
-//			if list[i] > ord[1] {
-//				list[i]
-//			}
-//		}
-//	}
-//}
-
-func checkNbrOrder(first, after int, list []int) bool {
+func checkNbrOrder(first, after int, list []int) (bool, int) {
 	foundLast := false
 
-	for _, nbr := range list {
+	for ind, nbr := range list {
 		if nbr == first {
-			return !foundLast
+			return !foundLast, ind
 		}
 		if nbr == after {
 			foundLast = true
 		}
 	}
 
-	return true
+	return true, -1
 }
 
 func validList(list []int) bool {
 	for _, ord := range order {
-		if !checkNbrOrder(ord[0], ord[1], list) {
+		valid, _ := checkNbrOrder(ord[0], ord[1], list)
+		if !valid {
 			return false
 		}
 	}
@@ -85,10 +76,48 @@ func getMiddleNumber(list []int) int {
 	return 0
 }
 
-func countMiddleNumbers() int {
+func sortOrdering() {
+	for _, list := range lists {
+		for _, ord := range order {
+			valid, wrongInd := checkNbrOrder(ord[0], ord[1], list)
+			if valid {
+				continue
+			}
+
+			listcopy := make([]int, len(list))
+			copy(listcopy, list)
+			for i := 0; i < len(listcopy); i++ {
+				if listcopy[i] == ord[1] {
+					listcopy[i] = ord[0]
+				}
+			}
+			listcopy[wrongInd] = ord[1]
+			copy(list, listcopy)
+		}
+	}
+}
+
+func getWrongOrdered() [][]int {
+	wrongOrdered := make([][]int, 0)
+	for _, list := range lists {
+		sorted := true
+		for _, ord := range order {
+			valid, _ := checkNbrOrder(ord[0], ord[1], list)
+			if !valid {
+				sorted = false
+			}
+		}
+		if !sorted {
+			wrongOrdered = append(wrongOrdered, list)
+		}
+	}
+	return wrongOrdered
+}
+
+func countMiddleNumbers(newList [][]int) int {
 	sum := 0
 
-	for _, list := range lists {
+	for _, list := range newList {
 		if validList(list) {
 			sum += getMiddleNumber(list)
 		}
@@ -100,14 +129,17 @@ func countMiddleNumbers() int {
 func main() {
 	parseInputFile()
 
-	//for _, ord := range order {
-	//	println(ord[0], ord[1])
-	//}
-	//for _, list := range lists {
-	//	for _, nbr := range list {
-	//		print(nbr, " ")
-	//	}
-	//}
+	println("Part 1: ", countMiddleNumbers(lists))
 
-	println("Part 1: ", countMiddleNumbers())
+	wrongOrdered := getWrongOrdered()
+	lists = wrongOrdered
+
+	for {
+		if len(getWrongOrdered()) == 0 {
+			break
+		}
+		sortOrdering()
+	}
+
+	println("Part 2: ", countMiddleNumbers(lists))
 }
