@@ -149,7 +149,7 @@ func infiniteLoop(mapp [][]int32) int {
 
 			copyMapp[row][col] = '#'
 			if walkLoop(&copyMapp) {
-				println("Infinite loop at row: ", row, " col: ", col)
+				//println("Infinite loop at row: ", row, " col: ", col)
 				infiniteLoopMapCount++
 			}
 		}
@@ -162,6 +162,6 @@ func main() {
 
 	println("Part 2: ", infiniteLoop(mapp))
 
-	//walkLoop(&mapp)
-	//println("Part 1: ", countVisited(&mapp))
+	walkLoop(&mapp)
+	println("Part 1: ", countVisited(&mapp))
 }
