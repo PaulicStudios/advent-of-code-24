@@ -50,8 +50,9 @@ func generateCombinations(chars []rune, length int, current []rune, index int, r
 }
 
 func checkValidCalc(sum int, nbrsTemplate []int, combinations *[]string) bool {
+	nbrs := make([]int, len(nbrsTemplate))
+
 	for _, combination := range *combinations {
-		nbrs := make([]int, len(nbrsTemplate))
 		copy(nbrs, nbrsTemplate)
 		for ind, nbr := range nbrs {
 			if ind == 0 {
@@ -63,6 +64,9 @@ func checkValidCalc(sum int, nbrsTemplate []int, combinations *[]string) bool {
 				nbrs[ind] = nbrs[ind-1] * nbr
 			} else if combination[ind-1] == '|' {
 				nbrs[ind] = utils.ConvertToInt(strconv.Itoa(nbrs[ind-1]) + strconv.Itoa(nbr))
+			}
+			if nbrs[ind] > sum {
+				break
 			}
 		}
 		if nbrs[len(nbrs)-1] == sum {
