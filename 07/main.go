@@ -4,11 +4,12 @@ import (
 	"adventofcode24/utils"
 	"bufio"
 	"os"
+	"strconv"
 	"strings"
 )
 
 func parseInputFile() ([]int, [][]int) {
-	file, err := os.Open("07/test.txt")
+	file, err := os.Open("07/input.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -60,6 +61,8 @@ func checkValidCalc(sum int, nbrsTemplate []int, combinations *[]string) bool {
 				nbrs[ind] = nbrs[ind-1] + nbr
 			} else if combination[ind] == '*' {
 				nbrs[ind] = nbrs[ind-1] * nbr
+			} else if combination[ind] == '|' {
+				nbrs[ind] = utils.ConvertToInt(strconv.Itoa(nbrs[ind-1]) + strconv.Itoa(nbr))
 			}
 		}
 		if nbrs[len(nbrs)-1] == sum {
@@ -89,9 +92,28 @@ func calcSumValidNbrs(sum []int, nbrs [][]int) int {
 	return validSum
 }
 
+func calcSumValidNbrs3(sum []int, nbrs [][]int) int {
+	validSum := 0
+
+	for ind, s := range sum {
+		operators := []rune{'+', '*', '|'}
+		length := len(nbrs[ind])
+		results := make([]string, 0)
+		current := make([]rune, length)
+
+		generateCombinations(operators, length, current, 0, &results)
+
+		if checkValidCalc(s, nbrs[ind], &results) {
+			validSum += s
+		}
+	}
+
+	return validSum
+}
+
 func main() {
 	sum, nbrs := parseInputFile()
 
 	println("Part 1: ", calcSumValidNbrs(sum, nbrs))
-
+	println("Part 2: ", calcSumValidNbrs3(sum, nbrs))
 }
