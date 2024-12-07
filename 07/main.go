@@ -57,11 +57,11 @@ func checkValidCalc(sum int, nbrsTemplate []int, combinations *[]string) bool {
 			if ind == 0 {
 				continue
 			}
-			if combination[ind] == '+' {
+			if combination[ind-1] == '+' {
 				nbrs[ind] = nbrs[ind-1] + nbr
-			} else if combination[ind] == '*' {
+			} else if combination[ind-1] == '*' {
 				nbrs[ind] = nbrs[ind-1] * nbr
-			} else if combination[ind] == '|' {
+			} else if combination[ind-1] == '|' {
 				nbrs[ind] = utils.ConvertToInt(strconv.Itoa(nbrs[ind-1]) + strconv.Itoa(nbr))
 			}
 		}
@@ -75,10 +75,10 @@ func checkValidCalc(sum int, nbrsTemplate []int, combinations *[]string) bool {
 
 func calcSumValidNbrs(sum []int, nbrs [][]int) int {
 	validSum := 0
+	operators := []rune{'+', '*'}
 
 	for ind, s := range sum {
-		operators := []rune{'+', '*'}
-		length := len(nbrs[ind])
+		length := len(nbrs[ind]) - 1
 		results := make([]string, 0)
 		current := make([]rune, length)
 
@@ -94,10 +94,10 @@ func calcSumValidNbrs(sum []int, nbrs [][]int) int {
 
 func calcSumValidNbrs3(sum []int, nbrs [][]int) int {
 	validSum := 0
+	operators := []rune{'+', '*', '|'}
 
 	for ind, s := range sum {
-		operators := []rune{'+', '*', '|'}
-		length := len(nbrs[ind])
+		length := len(nbrs[ind]) - 1
 		results := make([]string, 0)
 		current := make([]rune, length)
 
