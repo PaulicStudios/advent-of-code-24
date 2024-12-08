@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"os"
+	"strings"
 )
 
 func parseInputFile() []string {
@@ -10,7 +11,12 @@ func parseInputFile() []string {
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(file)
 
 	scanner := bufio.NewScanner(file)
 	data := make([]string, 0)
@@ -23,6 +29,25 @@ func parseInputFile() []string {
 	return data
 }
 
+var part2 = false
+
+func setNotesDiff(antenna rune, indRow, indCol int, data *[]string, antennaMap *[]string) bool {
+	if indRow < 0 || indCol < 0 || indRow >= len(*data) || indCol >= len((*data)[0]) {
+		return false
+	}
+
+	rowAntenna := []rune((*antennaMap)[indRow])
+	if rowAntenna[indCol] != '#' {
+		if !part2 && (*data)[indRow][indCol] == uint8(antenna) {
+			return false
+		}
+		rowAntenna[indCol] = '#'
+		(*antennaMap)[indRow] = string(rowAntenna)
+	}
+
+	return part2
+}
+
 func setNotes(antenna rune, indRow, indCol, indRowA, indColA int, data *[]string, antennaMap *[]string) {
 	diffRow := indRow - indRowA
 	diffCol := indCol - indColA
@@ -32,30 +57,13 @@ func setNotes(antenna rune, indRow, indCol, indRowA, indColA int, data *[]string
 	highRow := indRow + diffRow
 	highCol := indCol + diffCol
 
-	if lowRow >= 0 && lowCol >= 0 && lowRow < len(*data) && lowCol < len((*data)[0]) {
-		row := []rune((*data)[lowRow])
-		if row[lowCol] == '.' {
-			row[lowCol] = '#'
-			(*data)[lowRow] = string(row)
-		}
-		rowAntenna := []rune((*antennaMap)[lowRow])
-		if rowAntenna[lowCol] == '.' && row[lowCol] != antenna {
-			rowAntenna[lowCol] = '#'
-			(*antennaMap)[lowRow] = string(rowAntenna)
-		}
-		//setNotes(antenna, indRow, indCol, indRowA, indColA, data, antennaMap)
+	for setNotesDiff(antenna, lowRow, lowCol, data, antennaMap) {
+		lowRow -= diffRow
+		lowCol -= diffCol
 	}
-	if highRow >= 0 && highCol >= 0 && highRow < len(*data) && highCol < len((*data)[0]) {
-		row := []rune((*data)[highRow])
-		if row[highCol] == '.' {
-			row[highCol] = '#'
-			(*data)[highRow] = string(row)
-		}
-		rowAntenna := []rune((*antennaMap)[highRow])
-		if rowAntenna[highCol] == '.' && row[highCol] != antenna {
-			rowAntenna[highCol] = '#'
-			(*antennaMap)[highRow] = string(rowAntenna)
-		}
+	for setNotesDiff(antenna, highRow, highCol, data, antennaMap) {
+		highRow += diffRow
+		highCol += diffCol
 	}
 }
 
@@ -72,8 +80,8 @@ func searchNotes(antenna rune, indRowA int, indColA int, data *[]string, antenna
 
 func searchAntenna(data *[]string) *[]string {
 	antinodeMap := make([]string, len(*data))
-	for ind, _ := range *data {
-		for _, _ = range (*data)[0] {
+	for ind := range *data {
+		for range (*data)[0] {
 			antinodeMap[ind] += "."
 		}
 	}
@@ -91,11 +99,7 @@ func searchAntenna(data *[]string) *[]string {
 func countNotes(data *[]string) int {
 	count := 0
 	for _, row := range *data {
-		for _, col := range row {
-			if col == '#' {
-				count++
-			}
-		}
+		count += strings.Count(row, "#")
 	}
 	return count
 }
@@ -104,5 +108,6 @@ func main() {
 	data := parseInputFile()
 
 	println("Part 1: ", countNotes(searchAntenna(&data)))
-	println("Part 2: ", data[1])
+	part2 = true
+	println("Part 2: ", countNotes(searchAntenna(&data)))
 }
