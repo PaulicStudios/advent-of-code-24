@@ -7,7 +7,7 @@ import (
 )
 
 func parseInputFile() [][]rune {
-	file, err := os.Open("12/test.txt")
+	file, err := os.Open("12/input.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -35,6 +35,9 @@ func parseInputFile() [][]rune {
 var landsMap = make([][][2]int, 0)
 
 func floodFill(cur rune, data *[][]rune, x, y int, landsList *[][2]int) {
+	if x < 0 || y < 0 || x >= len(*data) || y >= len((*data)[0]) {
+		return
+	}
 	if (*data)[x][y] != cur {
 		return
 	}
@@ -43,75 +46,45 @@ func floodFill(cur rune, data *[][]rune, x, y int, landsList *[][2]int) {
 
 	(*landsList) = append((*landsList), [2]int{x, y})
 
-	x = x + 1
-	if x < len(*data) {
-		floodFill(cur, data, x, y, landsList)
-	}
-
-	x = x - 1
-	if x >= 0 {
-		floodFill(cur, data, x, y, landsList)
-	}
-
-	y = y + 1
-	if y < len((*data)[x]) {
-		floodFill(cur, data, x, y, landsList)
-	}
-
-	y = y - 1
-	if y >= 0 {
-		floodFill(cur, data, x, y, landsList)
-	}
+	floodFill(cur, data, x+1, y, landsList)
+	floodFill(cur, data, x-1, y, landsList)
+	floodFill(cur, data, x, y+1, landsList)
+	floodFill(cur, data, x, y-1, landsList)
 }
 
-func checkIfOutside(cur rune, data *[][]rune, x, y int, alreadyChecked *[][2]int) {
+func checkIfOutside(cur rune, data *[][]rune, x, y int) bool {
 	if x < -1 || x > len(*data) || y < -1 || y > len((*data)[0]) {
-		return
+		return false
 	}
 
 	if x == -1 || x == len(*data) || y == -1 || y == len((*data)[0]) {
-		// for _, alreadyChecked := range *alreadyChecked {
-		// 	if alreadyChecked[0] == x && alreadyChecked[1] == y {
-		// 		return
-		// 	}
-		// }
-		(*alreadyChecked) = append((*alreadyChecked), [2]int{x, y})
-		return
+		return true
 	}
-
-	if (*data)[x][y] == unicode.ToLower(cur) {
-		return
-	}
-
-	// for _, alreadyChecked := range *alreadyChecked {
-	// 	if alreadyChecked[0] == x && alreadyChecked[1] == y {
-	// 		return
-	// 	}
-	// }
-
-	(*alreadyChecked) = append((*alreadyChecked), [2]int{x, y})
+	return (*data)[x][y] != cur
 }
 
 func countPerimeter(cur rune, data *[][]rune, lands *[][2]int) int {
-
-	alreadyChecked := make([][2]int, 0)
+	fences := 0
 	for _, land := range *lands {
-		checkIfOutside(cur, data, land[0]+1, land[1], &alreadyChecked)
-		checkIfOutside(cur, data, land[0]-1, land[1], &alreadyChecked)
-		checkIfOutside(cur, data, land[0], land[1]+1, &alreadyChecked)
-		checkIfOutside(cur, data, land[0], land[1]-1, &alreadyChecked)
-		// Also check Diagonal
-		// checkIfOutside(cur, data, land[0]+1, land[1]+1, &alreadyChecked)
-		// checkIfOutside(cur, data, land[0]-1, land[1]-1, &alreadyChecked)
-		// checkIfOutside(cur, data, land[0]+1, land[1]-1, &alreadyChecked)
-		// checkIfOutside(cur, data, land[0]-1, land[1]+1, &alreadyChecked)
+		if checkIfOutside(cur, data, land[0]+1, land[1]) {
+			fences++
+		}
+		if checkIfOutside(cur, data, land[0]-1, land[1]) {
+			fences++
+		}
+		if checkIfOutside(cur, data, land[0], land[1]+1) {
+			fences++
+		}
+		if checkIfOutside(cur, data, land[0], land[1]-1) {
+			fences++
+		}
 	}
 
 	println("checking for ", string(cur))
-	println("alreadyChecked", len(alreadyChecked))
+	println("alreadyChecked", fences)
 	println("lands", len(*lands))
 
-	return len(alreadyChecked)
+	return fences
 }
 
 func loopEachField(data *[][]rune) {
@@ -130,9 +103,9 @@ func loopEachField(data *[][]rune) {
 
 func calcFenceCost(data *[][]rune) int {
 	cost := 0
-	for ind, land := range landsMap {
-		newCost := countPerimeter((*data)[ind][ind], data, &land) * len(land)
-		println(string((*data)[ind][ind]), newCost)
+	for _, land := range landsMap {
+		newCost := countPerimeter((*data)[land[0][0]][land[0][1]], data, &land) * len(land)
+		println(string((*data)[land[0][0]][land[0][1]]), newCost)
 		cost += newCost
 	}
 
