@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func parseInputFile() (*[][]rune, *string) {
@@ -176,10 +177,10 @@ func executeActions(data *[][]rune, actions *string) {
 func printMap(data *[][]rune) {
 	// print("\033[H\033[2J")
 	for _, row := range *data {
-		fmt.Println(string(row))
+		fmt.Println(strings.ReplaceAll(string(row), ".", " "))
 	}
 	fmt.Println()
-	// time.Sleep(100 * time.Millisecond)
+	// time.Sleep(10 * time.Millisecond)
 }
 
 func calcSumBoxes(data *[][]rune) int {
