@@ -162,19 +162,31 @@ func main() {
 	data := parseInputFile()
 
 	corruptedMap := createCoruptedMap(data, 1024, 71)
+	println("Part 1: ", solve(corruptedMap))
 
-	printMap(corruptedMap, 0, 0)
+	for i := 1024; i < len(*data); i++ {
+		corruptedMap := createCoruptedMap(data, i, 71)
 
-	// minSteps := math.MaxInt - 1
-	// visited := make([][]bool, len(*corruptedMap))
-	// for i := range visited {
-	// 	visited[i] = make([]bool, len((*corruptedMap)[i]))
-	// }
-	// lastMinSteps := math.MaxInt
-	// for minSteps < lastMinSteps {
-	// 	lastMinSteps = minSteps
-	// 	steps, _ := minimumSteps(corruptedMap, 0, 0, 0, visited, &minSteps)
-	// 	println(steps)
-	// }
-	println(solve(corruptedMap))
+		// printMap(corruptedMap, 0, 0)
+
+		// minSteps := math.MaxInt - 1
+		// visited := make([][]bool, len(*corruptedMap))
+		// for i := range visited {
+		// 	visited[i] = make([]bool, len((*corruptedMap)[i]))
+		// }
+		// lastMinSteps := math.MaxInt
+		// for minSteps < lastMinSteps {
+		// 	lastMinSteps = minSteps
+		// 	steps, _ := minimumSteps(corruptedMap, 0, 0, 0, visited, &minSteps)
+		// 	println(steps)
+		// }
+		moves := solve(corruptedMap)
+		println(moves)
+		if moves == math.MaxInt {
+			println("Breaking out of loop at ", i)
+			i -= 1
+			println("Part 2: ", (*data)[i][0], (*data)[i][1])
+			break
+		}
+	}
 }
