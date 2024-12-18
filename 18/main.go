@@ -5,12 +5,14 @@ import (
 	"bufio"
 	"math"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
 
 func parseInputFile() *[][2]int {
-	file, err := os.Open("18/test.txt")
+	file, err := os.Open("18/input.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -50,87 +52,86 @@ func createCoruptedMap(data *[][2]int, corruptedBytes, size int) *[][]rune {
 	return &mapp
 }
 
-func minimumSteps(mapp *[][]rune, row, col, steps int, visited [][]bool, scoreMap *[][]int, minSteps *int) (bool, int) {
-	if row < 0 || col < 0 || row >= len(*mapp) || col >= len((*mapp)[0]) {
-		return false, 0
+func getWeight(visited *[][]int, row, col int) int {
+	if row < 0 || col < 0 || row >= len(*visited) || col >= len((*visited)[0]) {
+		return math.MaxInt
 	}
 
-	if (*mapp)[row][col] == '#' {
-		return false, 0
-	}
-
-	if visited[row][col] {
-		return false, 0
-	}
-
-	visited[row][col] = true
-
-	printMap(mapp, row, col)
-
-	if row == len(*mapp)-1 && col == len((*mapp)[0])-1 {
-		if *minSteps > steps {
-			*minSteps = steps
-		}
-		printMapWithVisited(mapp, visited)
-		return true, steps
-	}
-
-	foundAny := false
-	stepsAny := math.MaxInt
-
-	found, step := minimumSteps(mapp, row+1, col, steps+1, visited, scoreMap, minSteps)
-	if found {
-		(*scoreMap)[row][col] = step
-		foundAny = true
-		stepsAny = step
-	}
-	found, step = minimumSteps(mapp, row-1, col, steps+1, visited, scoreMap, minSteps)
-	if found {
-		(*scoreMap)[row][col] = step
-		foundAny = true
-		if step < stepsAny {
-			stepsAny = step
-		}
-	}
-	found, step = minimumSteps(mapp, row, col+1, steps+1, visited, scoreMap, minSteps)
-	if found {
-		(*scoreMap)[row][col] = step
-		foundAny = true
-		if step < stepsAny {
-			stepsAny = step
-		}
-	}
-	found, step = minimumSteps(mapp, row, col-1, steps+1, visited, scoreMap, minSteps)
-	if found {
-		(*scoreMap)[row][col] = step
-		foundAny = true
-		if step < stepsAny {
-			stepsAny = step
-		}
-	}
-
-	return foundAny, stepsAny
+	return (*visited)[row][col] + distanceGoal(visited, row, col)
 }
 
-func findMinSteps(scoreMap *[][]int, row, col int, visited [][]bool) int {
-	if row < 0 || col < 0 || row >= len(*scoreMap) || col >= len((*scoreMap)[0]) {
-		return math.MaxInt
-	}
-	if (*scoreMap)[row][col] == math.MaxInt {
-		return math.MaxInt
-	}
-	if visited[row][col] {
-		return math.MaxInt
+func distanceGoal(mapp *[][]int, row, col int) int {
+	return len(*mapp) - row + len((*mapp)[0]) - col
+}
+
+type Direction int
+
+const (
+	Up Direction = iota
+	Down
+	Left
+	Right
+)
+
+type State struct {
+	row, col int
+	dir      Direction
+	moves    int
+}
+
+func solve(mapp *[][]rune) int {
+	ol := make([]State, 0)
+	ol = append(ol, State{0, 0, Down, 0})
+
+	cl := make([][][]int, len(*mapp))
+	for i := range cl {
+		cl[i] = make([][]int, len((*mapp)[i]))
+		for j := range cl[i] {
+			cl[i][j] = make([]int, 4)
+			for k := range cl[i][j] {
+				cl[i][j][k] = math.MaxInt
+			}
+		}
 	}
 
-	visited[row][col] = true
+	for len(ol) > 0 {
+		current := ol[0]
+		ol = ol[1:]
 
-	stepsUp := findMinSteps(scoreMap, row-1, col, visited)
-	stepsDown := findMinSteps(scoreMap, row+1, col, visited)
-	stepsLeft := findMinSteps(scoreMap, row, col-1, visited)
-	stepsRight := findMinSteps(scoreMap, row, col+1, visited)
+		if current.row == len(*mapp)-1 && current.col == len((*mapp)[0])-1 {
+			return current.moves
+		}
 
-	return int(math.Min(math.Min(float64(stepsUp), float64(stepsDown)), math.Min(float64(stepsLeft), float64(stepsRight))))
+		dirs := []Direction{Up, Down, Left, Right}
+		for _, dir := range dirs {
+			newRow, newCol := current.row, current.col
+			switch dir {
+			case Up:
+				newRow--
+			case Down:
+				newRow++
+			case Left:
+				newCol--
+			case Right:
+				newCol++
+			}
+
+			if newRow < 0 || newCol < 0 || newRow >= len(*mapp) || newCol >= len((*mapp)[0]) || (*mapp)[newRow][newCol] == '#' {
+				continue
+			}
+
+			newMoves := current.moves + 1
+			if newMoves < cl[newRow][newCol][dir] {
+				cl[newRow][newCol][dir] = newMoves
+				ol = append(ol, State{newRow, newCol, dir, newMoves})
+				sort.Slice(ol, func(i, j int) bool {
+					return ol[i].moves < ol[j].moves
+				})
+			}
+		}
+	}
+
+	return math.MaxInt
 }
 
 func printMap(mapp *[][]rune, row, col int) {
@@ -147,39 +148,33 @@ func printMap(mapp *[][]rune, row, col int) {
 	time.Sleep(50 * time.Millisecond)
 }
 
-func printMapWithVisited(mapp *[][]rune, visited [][]bool) {
-	for i := range *mapp {
-		for j := range (*mapp)[i] {
-			if visited[i][j] {
-				print("X")
-			} else {
-				print(string((*mapp)[i][j]))
-			}
+func printMapWithVisited(visited *[][]int) {
+	for i := range *visited {
+		for j := range (*visited)[i] {
+			print(strconv.Itoa((*visited)[i][j]))
 		}
 		println()
 	}
+	time.Sleep(50 * time.Millisecond)
 }
 
 func main() {
 	data := parseInputFile()
 
-	corruptedMap := createCoruptedMap(data, 12, 7)
+	corruptedMap := createCoruptedMap(data, 1024, 71)
 
 	printMap(corruptedMap, 0, 0)
 
-	minSteps := math.MaxInt
-	visited := make([][]bool, len(*corruptedMap))
-	for i := range visited {
-		visited[i] = make([]bool, len((*corruptedMap)[i]))
-	}
-	scoreMap := make([][]int, len(*corruptedMap))
-	for i := range scoreMap {
-		scoreMap[i] = make([]int, len((*corruptedMap)[i]))
-		for j := range scoreMap[i] {
-			scoreMap[i][j] = math.MaxInt
-		}
-	}
-	minimumSteps(corruptedMap, 0, 0, 0, visited, &scoreMap, &minSteps)
-
-	println(findMinSteps(&scoreMap, 0, 0, visited))
+	// minSteps := math.MaxInt - 1
+	// visited := make([][]bool, len(*corruptedMap))
+	// for i := range visited {
+	// 	visited[i] = make([]bool, len((*corruptedMap)[i]))
+	// }
+	// lastMinSteps := math.MaxInt
+	// for minSteps < lastMinSteps {
+	// 	lastMinSteps = minSteps
+	// 	steps, _ := minimumSteps(corruptedMap, 0, 0, 0, visited, &minSteps)
+	// 	println(steps)
+	// }
+	println(solve(corruptedMap))
 }
